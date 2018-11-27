@@ -1,4 +1,4 @@
-#include <iostream> // <- standardowe wejscie wyjscie
+#include <iostream>
 #include <fstream>
 #include <string.h>
 
@@ -7,6 +7,7 @@
 #define BLOCK_CIPHER 1
 #define STREAM_CIPHER 2
 #define ASYM_CIPHER 3
+
 // cipherModes
 #define NO_MODE 0
 #define CIPHER_MODE 1
@@ -41,24 +42,23 @@ void printHelp() {
 
 bool validateFiles(fstream *i, fstream *o, fstream *k) {
     bool res = true;
-    if(i->fail()) {
+    if(i->fail() || !i->is_open()) {
         res = false;
         cout << "Blad zwiazny z plikiem wejsciowym" << endl;
     }
 
-    if(o->fail()) {
+    if(o->fail() || !o->is_open()) {
         res = false;
         cout << "Blad zwiazany z plikiem wyjsciowym" << endl;
     }
 
-    if(k->fail()) {
+    if(k->fail() || !k->is_open()) {
         res = false;
         cout << "Blad zwiazany z plikiem klucza" << endl;
     }
 
     return res;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -231,8 +231,19 @@ int main(int argc, char** argv)
                     return 0;
                 }
 
-        }
+                switch (cipherMode) {
+                    default:
+                    case NO_MODE:
+                        cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
+                        return 0;
+                    case CIPHER_MODE:
 
+                        break;
+                    case DECIPHER_MODE:
+
+                        break;
+                }
+        }
     }
 
     getchar();
