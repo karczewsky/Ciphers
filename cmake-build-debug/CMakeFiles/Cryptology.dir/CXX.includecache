@@ -6,11 +6,17 @@
 
 #IncludeRegexTransform: 
 
-/cygdrive/c/Users/wolpe/CLionProjects/Cryptology/main.cpp
+/home/jakub/WAT/Kryptologia/Ciphers/main.cpp
 iostream
 -
 fstream
 -
 string.h
+-
+stdlib.h
+-
+stdio.h
+-
+sstream
 -
 

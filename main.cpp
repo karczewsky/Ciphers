@@ -1,12 +1,15 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sstream>
 
 // cipherFlags
 #define NO_CIPHER 0
 #define BLOCK_CIPHER 1
-#define STREAM_CIPHER 2
-#define ASYM_CIPHER 3
+//#define STREAM_CIPHER 2
+//#define ASYM_CIPHER 3
 
 // cipherModes
 #define NO_MODE 0
@@ -231,17 +234,90 @@ int main(int argc, char** argv)
                     return 0;
                 }
 
+                string i_str;
+                string k_str;
+                stringstream ss_out;
+
+                input >> i_str;
+                key >> k_str;
+
                 switch (cipherMode) {
                     default:
-                    case NO_MODE:
+                    case NO_MODE: {
                         cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
                         return 0;
-                    case CIPHER_MODE:
+                    }
+                    case CIPHER_MODE: {
+                        int len = i_str.size() / 16;
 
-                        break;
-                    case DECIPHER_MODE:
+                        for(int i=0; i<len; i++) {
+                            string v_s = i_str.substr(i*16, 16);
+                            string k_s = k_str.substr(i*32, 32);
 
+                            uint32_t sum = 0;
+                            uint32_t delta=0x9E3779B9;
+                            uint32_t v[2];
+                            uint32_t k[4];
+
+                            for (int j=0; j<2; j++) {
+                                v[j] = strtoul(v_s.substr(j*8, 8).c_str(), NULL, 16);
+                            }
+
+                            for (int j=0; j<4; j++) {
+                                k[j] = strtoul(k_s.substr(j*8, 8).c_str(), NULL, 16);
+                            }
+
+                            for (int j=0; j<32; j++) {
+                                sum += delta;
+                                v[0] += ((v[1]<<4) + k[0]) ^ (v[1] + sum) ^ ((v[1]>>5) + k[1]);
+                                v[1] += ((v[0]<<4) + k[2]) ^ (v[0] + sum) ^ ((v[0]>>5) + k[3]);
+                            }
+
+                            ss_out << hex << v[0] << v[1];
+                            output << hex << v[0] << v[1];
+                        }
+
+                        cout << "Wiadomosc plaintext: " << i_str << endl;
+                        cout << "Klucz: " << k_str << endl;
+                        cout << "Wiadomosc zaszyfrowana: "  << ss_out.str() << endl;
                         break;
+                    }
+                    case DECIPHER_MODE: {
+                        int len = i_str.size() / 16;
+
+                        for(int i=0; i<len; i++) {
+                            string v_s = i_str.substr(i*16, 16);
+                            string k_s = k_str.substr(i*32, 32);
+
+                            uint32_t delta = 0x9E3779B9;
+                            uint32_t sum = 32*delta;
+                            uint32_t v[2];
+                            uint32_t k[4];
+
+                            for (int j=0; j<2; j++) {
+                                v[j] = strtoul(v_s.substr(j*8, 8).c_str(), NULL, 16);
+                            }
+
+                            for (int j=0; j<4; j++) {
+                                k[j] = strtoul(k_s.substr(j*8, 8).c_str(), NULL, 16);
+                            }
+
+                            for (int j=0; j<32; j++) {
+                                v[1] -= ((v[0]<<4) + k[2]) ^ (v[0] + sum) ^ ((v[0]>>5) + k[3]);
+                                v[0] -= ((v[1]<<4) + k[0]) ^ (v[1] + sum) ^ ((v[1]>>5) + k[1]);
+                                sum -= delta;
+                            }
+
+                            ss_out << hex << v[0] << v[1];
+                            output << hex << v[0] << v[1];
+                        }
+
+
+                        cout << "Wiadomosc zaszyfrowana: " << i_str << endl;
+                        cout << "Klucz: " << k_str << endl;
+                        cout << "Wiadomosc plaintext: "  << ss_out.str() << endl;
+                        break;
+                    }
                 }
         }
     }
