@@ -308,6 +308,7 @@ int main(int argc, char** argv)
                         break;
                     }
                 }
+                break;
             }
             case STREAM_CIPHER: {
                 int len = i_str.length() / 8;
