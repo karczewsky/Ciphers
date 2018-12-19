@@ -8,8 +8,8 @@
 // cipherFlags
 #define NO_CIPHER 0
 #define BLOCK_CIPHER 1
-//#define STREAM_CIPHER 2
-//#define ASYM_CIPHER 3
+#define STREAM_CIPHER 2
+#define ASYM_CIPHER 3
 
 // cipherModes
 #define NO_MODE 0
@@ -43,26 +43,6 @@ void printHelp() {
     cout << "**********************************************************************" << endl;
 }
 
-bool validateFiles(fstream *i, fstream *o, fstream *k) {
-    bool res = true;
-    if(i->fail() || !i->is_open()) {
-        res = false;
-        cout << "Blad zwiazny z plikiem wejsciowym" << endl;
-    }
-
-    if(o->fail() || !o->is_open()) {
-        res = false;
-        cout << "Blad zwiazany z plikiem wyjsciowym" << endl;
-    }
-
-    if(k->fail() || !k->is_open()) {
-        res = false;
-        cout << "Blad zwiazany z plikiem klucza" << endl;
-    }
-
-    return res;
-}
-
 int main(int argc, char** argv)
 {
     cout << "**********************************************************************" << endl;
@@ -84,8 +64,8 @@ int main(int argc, char** argv)
         }
     }
     else {
-        int cipherFlag = 0;
-        int cipherMode = 0;
+        int cipherFlag = NO_CIPHER;
+        int cipherMode = NO_MODE;
 
         fstream input;
         fstream output;
@@ -166,14 +146,14 @@ int main(int argc, char** argv)
                     }
 
                     else if (string(argv[i]) == "-bc") {
-                        cipherFlag = 1;
+                        cipherFlag = BLOCK_CIPHER;
                         if (string(argv[i + 1]) == "c") {
-                            cipherMode = 1;
+                            cipherMode = CIPHER_MODE;
                             cout << "Szyfr blokowy bedzie pracowal w trybie szyfrowania: " << argv[++i] << endl;
                         }
                         else if (string(argv[i + 1]) == "d")
                         {
-                            cipherMode = 2;
+                            cipherMode = DECIPHER_MODE;
                             cout << "Szyfr blokowy bedzie pracowal w trybie deszyfrowania: " << argv[++i] << endl;
                         }
                         else {
@@ -183,14 +163,18 @@ int main(int argc, char** argv)
                     }
 
                     else if (string(argv[i]) == "-sc") {
-                        cipherFlag = 2;
+                        if (cipherFlag) {
+                            cout << "Podano 2 rodzaje szyfrow/trybow pracy. Bledna konfiguracja programu" << endl;
+                            return 1;
+                        }
+                        cipherFlag = STREAM_CIPHER;
                         if (string(argv[i + 1]) == "c") {
-                            cipherMode = 1;
+                            cipherMode = CIPHER_MODE;
                             cout << "Szyfr strumieniowy bedzie pracowal w trybie szyfrowania: " << argv[++i] << endl;
                         }
                         else if(string(argv[i + 1]) == "d")
                         {
-                            cipherMode = 2;
+                            cipherMode = DECIPHER_MODE;
                             cout << "Szyfr strumieniowy bedzie pracowal w trybie deszyfrowania: " << argv[++i] << endl;
                         }
                         else {
@@ -200,14 +184,18 @@ int main(int argc, char** argv)
                     }
 
                     else if (string(argv[i]) == "-ac") {
-                        cipherFlag = 3;
+                        if (cipherFlag) {
+                            cout << "Podano 2 rodzaje szyfrow/trybow pracy. Bledna konfiguracja programu" << endl;
+                            return 1;
+                        }
+                        cipherFlag = ASYM_CIPHER;
                         if (string(argv[i + 1]) == "c") {
-                            cipherMode = 1;
+                            cipherMode = CIPHER_MODE;
                             cout << "Szyfr asymetryczny bedzie pracowal w trybie szyfrowania: " << argv[++i] << endl;
                         }
                         else if(string(argv[i + 1]) == "d")
                         {
-                            cipherMode = 2;
+                            cipherMode = DECIPHER_MODE;
                             cout << "Szyfr asymetryczny bedzie pracowal w trybie deszyfrowania: " << argv[++i] << endl;
                         }
                         else {
@@ -223,24 +211,23 @@ int main(int argc, char** argv)
             }
         }
 
+
+        string i_str;
+        string k_str;
+        stringstream ss_out;
+
+        input >> i_str;
+        key >> k_str;
+        input.close();
+        key.close();
+
         switch (cipherFlag) {
             default:
-            case NO_CIPHER:
+            case NO_CIPHER: {
                 cout << "Brak wybranego sposobu dzialania programu";
                 break;
-            case BLOCK_CIPHER:
-                if(!validateFiles(&input, &output, &key)) {
-                    cout << "Program nie moze kontynuowac z bledna konfiguracja plikow" << endl;
-                    return 0;
-                }
-
-                string i_str;
-                string k_str;
-                stringstream ss_out;
-
-                input >> i_str;
-                key >> k_str;
-
+            }
+            case BLOCK_CIPHER: {
                 switch (cipherMode) {
                     default:
                     case NO_MODE: {
@@ -248,80 +235,108 @@ int main(int argc, char** argv)
                         return 0;
                     }
                     case CIPHER_MODE: {
-                        int len = i_str.size() / 16;
+                        int len = i_str.length() / 16;
+                        cout << i_str.length() << endl;
+                        for (int i = 0; i < len; i++) {
+                            string v_s = i_str.substr(i * 16, 16);
+                            string k_s = k_str.substr(i * 32, 32);
 
-                        for(int i=0; i<len; i++) {
-                            string v_s = i_str.substr(i*16, 16);
-                            string k_s = k_str.substr(i*32, 32);
-
-                            uint32_t sum = 0;
-                            uint32_t delta=0x9E3779B9;
                             uint32_t v[2];
                             uint32_t k[4];
 
-                            for (int j=0; j<2; j++) {
-                                v[j] = strtoul(v_s.substr(j*8, 8).c_str(), NULL, 16);
+                            for (int j = 0; j < 2; j++) {
+                                v[j] = strtoul(v_s.substr(j * 8, 8).c_str(), NULL, 16);
                             }
 
-                            for (int j=0; j<4; j++) {
-                                k[j] = strtoul(k_s.substr(j*8, 8).c_str(), NULL, 16);
+                            for (int j = 0; j < 4; j++) {
+                                k[j] = strtoul(k_s.substr(j * 8, 8).c_str(), NULL, 16);
                             }
 
-                            for (int j=0; j<32; j++) {
+                            uint32_t sum = 0;
+                            uint32_t delta = 0x9E3779B9;
+
+                            for (int j = 0; j < 32; j++) {
                                 sum += delta;
-                                v[0] += ((v[1]<<4) + k[0]) ^ (v[1] + sum) ^ ((v[1]>>5) + k[1]);
-                                v[1] += ((v[0]<<4) + k[2]) ^ (v[0] + sum) ^ ((v[0]>>5) + k[3]);
+                                v[0] += ((v[1] << 4) + k[0]) ^ (v[1] + sum) ^ ((v[1] >> 5) + k[1]);
+                                v[1] += ((v[0] << 4) + k[2]) ^ (v[0] + sum) ^ ((v[0] >> 5) + k[3]);
                             }
 
-                            ss_out << hex << v[0] << v[1];
-                            output << hex << v[0] << v[1];
+                            stringstream ss_temp;
+                            ss_temp << hex << v[0] << v[1];
+                            string s_temp = ss_temp.str();
+                            while(s_temp.length() < 16) {
+                                s_temp = "0" + s_temp;
+                            }
+                            ss_out << s_temp;
                         }
-
-                        cout << "Wiadomosc plaintext: " << i_str << endl;
-                        cout << "Klucz: " << k_str << endl;
-                        cout << "Wiadomosc zaszyfrowana: "  << ss_out.str() << endl;
                         break;
                     }
                     case DECIPHER_MODE: {
                         int len = i_str.size() / 16;
 
-                        for(int i=0; i<len; i++) {
-                            string v_s = i_str.substr(i*16, 16);
-                            string k_s = k_str.substr(i*32, 32);
+                        for (int i = 0; i < len; i++) {
+                            string v_s = i_str.substr(i * 16, 16);
+                            string k_s = k_str.substr(i * 32, 32);
 
                             uint32_t delta = 0x9E3779B9;
-                            uint32_t sum = 32*delta;
+                            uint32_t sum = 32 * delta;
                             uint32_t v[2];
                             uint32_t k[4];
 
-                            for (int j=0; j<2; j++) {
-                                v[j] = strtoul(v_s.substr(j*8, 8).c_str(), NULL, 16);
+                            for (int j = 0; j < 2; j++) {
+                                v[j] = strtoul(v_s.substr(j * 8, 8).c_str(), NULL, 16);
                             }
 
-                            for (int j=0; j<4; j++) {
-                                k[j] = strtoul(k_s.substr(j*8, 8).c_str(), NULL, 16);
+                            for (int j = 0; j < 4; j++) {
+                                k[j] = strtoul(k_s.substr(j * 8, 8).c_str(), NULL, 16);
                             }
 
-                            for (int j=0; j<32; j++) {
-                                v[1] -= ((v[0]<<4) + k[2]) ^ (v[0] + sum) ^ ((v[0]>>5) + k[3]);
-                                v[0] -= ((v[1]<<4) + k[0]) ^ (v[1] + sum) ^ ((v[1]>>5) + k[1]);
+                            for (int j = 0; j < 32; j++) {
+                                v[1] -= ((v[0] << 4) + k[2]) ^ (v[0] + sum) ^ ((v[0] >> 5) + k[3]);
+                                v[0] -= ((v[1] << 4) + k[0]) ^ (v[1] + sum) ^ ((v[1] >> 5) + k[1]);
                                 sum -= delta;
                             }
 
-                            ss_out << hex << v[0] << v[1];
-                            output << hex << v[0] << v[1];
+                            stringstream ss_temp;
+                            ss_temp << hex << v[0] << v[1];
+                            string s_temp = ss_temp.str();
+                            while(s_temp.length() < 16) {
+                                s_temp = "0" + s_temp;
+                            }
+                            ss_out << s_temp;
                         }
-
-
-                        cout << "Wiadomosc zaszyfrowana: " << i_str << endl;
-                        cout << "Klucz: " << k_str << endl;
-                        cout << "Wiadomosc plaintext: "  << ss_out.str() << endl;
                         break;
                     }
                 }
+            }
+            case STREAM_CIPHER: {
+                int len = i_str.length() / 8;
+                uint32_t lfsr = strtoul(k_str.c_str(), NULL, 16);
+                for (int i = 0; i < len; i++) {
+                    uint32_t i_frag = strtoul(i_str.substr(i * 8, 8).c_str(), NULL, 16);
+                    stringstream ss_temp;
+
+                    uint32_t leaving_block = 0;
+                    for (int j = 0; j < 32; j++) {
+                        uint32_t bit = ((lfsr >> 31) ^ (lfsr >> 1) ^ (lfsr >> 0)) & 1;
+                        leaving_block = (leaving_block << 1) | (lfsr & 1);
+                        lfsr = (lfsr >> 1) | (bit << 31);
+                    }
+
+                    i_frag = i_frag ^ leaving_block;
+                    ss_temp << hex << i_frag;
+                    string s_temp = ss_temp.str();
+                    while(s_temp.length() < 8) {
+                        s_temp = "0" + s_temp;
+                    }
+                    ss_out << s_temp;
+                }
+                break;
+            }
         }
+        output << ss_out.str();
+        output.close();
     }
 
-    getchar();
     return 0;
 }

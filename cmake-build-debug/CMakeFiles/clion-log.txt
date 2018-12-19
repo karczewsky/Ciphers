@@ -1,4 +1,4 @@
-/home/jakub/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/182.5107.21/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/jakub/WAT/Kryptologia/Ciphers
+/home/jakub/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/183.4588.63/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/jakub/WAT/Kryptologia/Ciphers
 -- The C compiler identification is GNU 8.2.1
 -- The CXX compiler identification is GNU 8.2.1
 -- Check for working C compiler: /usr/bin/cc
