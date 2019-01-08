@@ -354,6 +354,7 @@ int main(int argc, char** argv)
         }
 
         output << ss_out.str();
+        output << endl;
         output.close();
     }
 

@@ -1,1 +1,1 @@
-/usr/bin/c++  -g   CMakeFiles/Cryptology.dir/main.cpp.o  -o Cryptology 
+/usr/bin/c++     CMakeFiles/Cryptology.dir/main.cpp.o  -o Cryptology 
