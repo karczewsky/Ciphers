@@ -211,6 +211,15 @@ int main(int argc, char** argv)
             }
         }
 
+        if(cipherFlag == NO_CIPHER || cipherMode == NO_MODE) {
+            cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
+            return 0;
+        }
+
+        if(!input.is_open() || !output.is_open() || !key.is_open()) {
+            cout << "Brak poprawnej konfiguracji plikow" << endl;
+            return 0;
+        }
 
         string i_str;
         string k_str;
@@ -222,15 +231,13 @@ int main(int argc, char** argv)
         key.close();
 
         switch (cipherFlag) {
-            default:
-            case NO_CIPHER: {
+            default: {
                 cout << "Brak wybranego sposobu dzialania programu";
                 break;
             }
             case BLOCK_CIPHER: {
                 switch (cipherMode) {
-                    default:
-                    case NO_MODE: {
+                    default: {
                         cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
                         return 0;
                     }
@@ -312,8 +319,7 @@ int main(int argc, char** argv)
             }
             case STREAM_CIPHER: {
                 switch (cipherMode) {
-                    default:
-                    case NO_MODE: {
+                    default: {
                         cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
                         return 0;
                     }
@@ -346,6 +352,7 @@ int main(int argc, char** argv)
                 break;
             }
         }
+
         output << ss_out.str();
         output.close();
     }
