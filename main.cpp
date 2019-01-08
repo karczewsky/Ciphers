@@ -311,26 +311,37 @@ int main(int argc, char** argv)
                 break;
             }
             case STREAM_CIPHER: {
-                int len = i_str.length() / 8;
-                uint32_t lfsr = strtoul(k_str.c_str(), NULL, 16);
-                for (int i = 0; i < len; i++) {
-                    uint32_t i_frag = strtoul(i_str.substr(i * 8, 8).c_str(), NULL, 16);
-                    stringstream ss_temp;
-
-                    uint32_t leaving_block = 0;
-                    for (int j = 0; j < 32; j++) {
-                        uint32_t bit = ((lfsr >> 31) ^ (lfsr >> 1) ^ (lfsr >> 0)) & 1;
-                        leaving_block = (leaving_block << 1) | (lfsr & 1);
-                        lfsr = (lfsr >> 1) | (bit << 31);
+                switch (cipherMode) {
+                    default:
+                    case NO_MODE: {
+                        cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
+                        return 0;
                     }
+                    case CIPHER_MODE:
+                    case DECIPHER_MODE: {
+                        int len = i_str.length() / 8;
+                        uint32_t lfsr = strtoul(k_str.c_str(), NULL, 16);
+                        for (int i = 0; i < len; i++) {
+                            uint32_t i_frag = strtoul(i_str.substr(i * 8, 8).c_str(), NULL, 16);
+                            stringstream ss_temp;
 
-                    i_frag = i_frag ^ leaving_block;
-                    ss_temp << hex << i_frag;
-                    string s_temp = ss_temp.str();
-                    while(s_temp.length() < 8) {
-                        s_temp = "0" + s_temp;
+                            uint32_t leaving_block = 0;
+                            for (int j = 0; j < 32; j++) {
+                                uint32_t bit = ((lfsr >> 31) ^ (lfsr >> 1) ^ (lfsr >> 0)) & 1;
+                                leaving_block = (leaving_block << 1) | (lfsr & 1);
+                                lfsr = (lfsr >> 1) | (bit << 31);
+                            }
+
+                            i_frag = i_frag ^ leaving_block;
+                            ss_temp << hex << i_frag;
+                            string s_temp = ss_temp.str();
+                            while (s_temp.length() < 8) {
+                                s_temp = "0" + s_temp;
+                            }
+                            ss_out << s_temp;
+                        }
+                        break;
                     }
-                    ss_out << s_temp;
                 }
                 break;
             }
