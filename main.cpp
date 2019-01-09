@@ -351,6 +351,32 @@ int main(int argc, char** argv)
                 }
                 break;
             }
+            case ASYM_CIPHER: {
+                switch (cipherMode) {
+                    default: {
+                        cout << "Brak poprawnego wybrania trybu pracy(szyfruj/deszyfruj)" << endl;
+                        return 0;
+                    }
+                    case CIPHER_MODE:
+                    case DECIPHER_MODE: {
+                        uint32_t d_e = strtoul(k_str.substr(0, 2).c_str(), NULL, 16);
+                        uint32_t n = strtoul(k_str.substr(3, 2).c_str(), NULL, 16);
+
+                        for(char& c : i_str) {
+                            uint32_t m = (int)c;
+                            uint32_t powered = m;
+
+                            for(int i=0; i<d_e - 1; i++) {
+                                powered *= m;
+                                powered %= n;
+                            }
+
+                            ss_out << hex <<  powered;
+                        }
+                    }
+                }
+
+            }
         }
 
         output << ss_out.str();
